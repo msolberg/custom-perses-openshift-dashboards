@@ -2,6 +2,8 @@
 
 This repository contains a collection of custom Perses dashboards designed for monitoring and observability of OpenShift clusters managed through Red Hat Advanced Cluster Management (RHACM). These dashboards provide comprehensive insights into cluster health, resource utilization, application performance, and operational metrics.
 
+Perses dashboards are a Technology Preview in Advanced Cluster Management version 2.17. See the [2.17 Release Notes](https://docs.redhat.com/en/documentation/red_hat_advanced_cluster_management_for_kubernetes/2.17/html/release_notes/acm-release-notes#observability) for more information.
+
 See [SETUP.md](SETUP.md) for the full deployment procedure (RHACM MCO, the multicluster observability add-on, and the Cluster Observability Operator).
 
 See [ACM Observability Guide](https://docs.redhat.com/en/documentation/red_hat_advanced_cluster_management_for_kubernetes/2.17/html/observability/observing-environments-intro#enable-mcoa-perses) for official documentation for enabling Perses Dashboards in ACM.
