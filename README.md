@@ -4,6 +4,8 @@ This repository contains a collection of custom Perses dashboards designed for m
 
 See [SETUP.md](SETUP.md) for the full deployment procedure (RHACM MCO, the multicluster observability add-on, and the Cluster Observability Operator).
 
+See [ACM Observability Guide](https://docs.redhat.com/en/documentation/red_hat_advanced_cluster_management_for_kubernetes/2.17/html/observability/observing-environments-intro#enable-mcoa-perses) for official documentation for enabling Perses Dashboards in ACM.
+
 ## Overview
 
 The dashboards (`perses-dashboards/`) are deployed as `PersesDashboard` CRDs in the `openshift-cluster-observability-operator` namespace and are automatically discovered by Perses/COO's console plugin.
