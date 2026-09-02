@@ -20,6 +20,11 @@ oc create namespace open-cluster-management-observability
 
 **1.2  Create the S3 object storage bucket**
 
+Choose **one** of the two options below depending on your storage backend.
+
+<details>
+<summary><strong>Option A — OpenShift Data Foundation (NooBaa)</strong></summary>
+
 Save as `obc.yaml` and apply:
 ```yaml
 apiVersion: objectbucket.io/v1alpha1
@@ -35,7 +40,31 @@ spec:
 oc apply -f obc.yaml
 ```
 
-**1.3  Create the `thanos-object-storage` secret** (populates S3 credentials from the OBC):
+</details>
+
+<details>
+<summary><strong>Option B — AWS S3</strong></summary>
+
+Create a bucket with the AWS CLI (for any region other than `us-east-1`, add
+`--create-bucket-configuration LocationConstraint=<region>`):
+```bash
+aws s3api create-bucket \
+  --bucket acm-thanos-$(openssl rand -hex 4) \
+  --region us-east-1
+```
+
+Note the bucket name printed in the output — you will need it in step 1.3.
+
+</details>
+
+**1.3  Create the `thanos-object-storage` secret**
+
+Choose the option matching your storage backend from step 1.2.
+
+<details>
+<summary><strong>Option A — OpenShift Data Foundation (NooBaa)</strong></summary>
+
+Populates S3 credentials from the OBC:
 ```bash
 oc patch secret thanos-object-storage -n open-cluster-management-observability --type=merge \
   -p "{\"stringData\":{\"thanos.yaml\":\"type: S3\nconfig:\n  bucket: $(oc get configmap acm-thanos-bucket -n open-cluster-management-observability -o jsonpath='{.data.BUCKET_NAME}')\n  endpoint: s3.openshift-storage.svc.cluster.local\n  insecure: true\n  access_key: $(oc get secret acm-thanos-bucket -n open-cluster-management-observability -o jsonpath='{.data.AWS_ACCESS_KEY_ID}' | base64 -d)\n  secret_key: $(oc get secret acm-thanos-bucket -n open-cluster-management-observability -o jsonpath='{.data.AWS_SECRET_ACCESS_KEY}' | base64 -d)\n\"}}" \
@@ -49,6 +78,32 @@ config:
   access_key: $(oc get secret acm-thanos-bucket -n open-cluster-management-observability -o jsonpath='{.data.AWS_ACCESS_KEY_ID}' | base64 -d)
   secret_key: $(oc get secret acm-thanos-bucket -n open-cluster-management-observability -o jsonpath='{.data.AWS_SECRET_ACCESS_KEY}' | base64 -d)"
 ```
+
+</details>
+
+<details>
+<summary><strong>Option B — AWS S3</strong></summary>
+
+Replace `<BUCKET>` and `<REGION>` with the values from step 1.2:
+```bash
+BUCKET=<BUCKET>
+REGION=us-east-1
+
+oc create secret generic thanos-object-storage \
+  -n open-cluster-management-observability \
+  --from-literal=thanos.yaml="type: S3
+config:
+  bucket: ${BUCKET}
+  endpoint: s3.${REGION}.amazonaws.com
+  region: ${REGION}
+  access_key: $(aws configure get aws_access_key_id)
+  secret_key: $(aws configure get aws_secret_access_key)"
+```
+
+If you are using IAM roles (IRSA / Pod Identity) instead of static keys, drop
+`access_key` and `secret_key` and add `aws_sdk_auth: true` under `config:`.
+
+</details>
 
 **1.4  Copy the global pull secret** (so MCO can pull Thanos/Grafana images):
 ```bash
@@ -73,7 +128,7 @@ spec:
     metricObjectStorage:
       name: thanos-object-storage
       key: thanos.yaml
-    storageClass: ocs-storagecluster-ceph-rbd
+    storageClass: ocs-storagecluster-ceph-rbd   # ODF — use gp3 (or your default SC) on AWS
 ```
 ```bash
 oc apply -f mco-instance.yaml
