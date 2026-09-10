@@ -1,0 +1,14 @@
+apiVersion: observability.open-cluster-management.io/v1beta2
+kind: MultiClusterObservability
+metadata:
+  name: observability
+spec:
+  availabilityConfig: Basic
+  observabilityAddonSpec:
+    enableMetrics: true
+    interval: 300
+  storageConfig:
+    metricObjectStorage:
+      name: thanos-object-storage
+      key: thanos.yaml
+    storageClass: ocs-storagecluster-ceph-rbd
